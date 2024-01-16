@@ -7,13 +7,13 @@
 ## Contents
 
 1. [Task 1](#task-1) \
-    1.1. [Task 1. Information](#task-1.information) \
-    1.2. [Task 1. Code](#task-1.code)
+    1.1. [Task 1. Information](#task-1-information) \
+    1.2. [Task 1. Code](#task-1-code)
 2. [Task 2](#task-2) \
-    2.1. [Task 2. Code](#task-2.code)
+    2.1. [Task 2. Code](#task-2-code)
 3. [Task 3](#task-3) \
-    3.1. [Task 3. Information](#task-3.information) \
-    3.2. [Task 3. Code](#task-3.code)
+    3.1. [Task 3. Information](#task-3-information) \
+    3.2. [Task 3. Code](#task-3-code)
 
 # Task 1
 
