@@ -1,44 +1,56 @@
-#include <iostream>
-#include <vector>
-#include <thread>
-#include <mutex>
-#include <semaphore.h>
-#include <chrono>
-#include <atomic>
-#include <unistd.h>
+#include "threading.h"
 
 using namespace std;
 
-const int numThreads = 5;
+const int numThreads = 15;
 const int raceLength = 50;
 
-// Массив для представления гоночной дорожки
+// An array to represent the race track
 char raceTrack[raceLength];
 
-// Примитивы синхронизации
+// Synchronization primitives
 mutex mtx;
 sem_t semaphore;
 sem_t semaphoreSlim;
 atomic_flag spinLock = ATOMIC_FLAG_INIT;
 atomic<int> spinWaitCount(0);
 int monitorLock = 0;
+Barrier barrier(numThreads);
 
-// Функция для заполнения гоночной дорожки случайными символами
+int main() {
+    sem_init(&semaphore, 0, 1);
+    sem_init(&semaphoreSlim, 0, 1);
+
+    runRace("Mutex", mutexRace);
+    runRace("Semaphore", semaphoreRace);
+    runRace("SemaphoreSlim", semaphoreSlimRace);
+    runRace("Barrier", barrierRace);
+    runRace("SpinLock", spinLockRace);
+    runRace("SpinWait", spinWaitRace);
+    runRace("Monitor", monitorRace);
+
+    sem_destroy(&semaphore);
+    sem_destroy(&semaphoreSlim);
+
+    return 0;
+}
+
+// Fill the race track with random symbols
 void fillRaceTrack(char* track, int length) {
     for (int i = 0; i < length; ++i) {
         track[i] = ' ';
     }
 }
 
-// Функция для вывода гоночной дорожки в консоль
+// Output the race track to the console
 void printRaceTrack() {
     for (int i = 0; i < raceLength; ++i) {
         cout << raceTrack[i];
     }
-    cout << endl;
+    cout << "\n\n";
 }
 
-// Функция для гонки с использованием Mutex
+// Racing using Mutex
 void mutexRace(int id) {
     int position = 0;
     while (position < raceLength) {
@@ -50,7 +62,7 @@ void mutexRace(int id) {
     }
 }
 
-// Функция для гонки с использованием Semaphore
+// Racing using Semaphore
 void semaphoreRace(int id) {
     int position = 0;
     while (position < raceLength) {
@@ -62,7 +74,7 @@ void semaphoreRace(int id) {
     }
 }
 
-// Функция для гонки с использованием SemaphoreSlim
+// Racing using SemaphoreSlim
 void semaphoreSlimRace(int id) {
     int position = 0;
     while (position < raceLength) {
@@ -74,7 +86,7 @@ void semaphoreSlimRace(int id) {
     }
 }
 
-// Функция для гонки с использованием SpinLock
+// Racing using SpinLock
 void spinLockRace(int id) {
     int position = 0;
     while (position < raceLength) {
@@ -87,7 +99,7 @@ void spinLockRace(int id) {
     }
 }
 
-// Функция для гонки с использованием SpinWait
+// Racing using SpinWait
 void spinWaitRace(int id) {
     int position = 0;
     while (position < raceLength) {
@@ -100,7 +112,7 @@ void spinWaitRace(int id) {
     }
 }
 
-// Функция для гонки с использованием Monitor
+// Racing using Monitor
 void monitorRace(int id) {
     int position = 0;
     while (position < raceLength) {
@@ -111,7 +123,21 @@ void monitorRace(int id) {
     }
 }
 
-// Функция для запуска гонки с указанным примитивом синхронизации
+// Racing using Barrier
+void barrierRace(int id) {
+    int position = 0;
+    while (position < raceLength) {
+        {
+            lock_guard<mutex> lock(mtx);
+            raceTrack[position] = static_cast<char>('0' + id);
+            ++position;
+        }
+        barrier.Wait();  // All threads wait at the barrier
+        usleep(10000);   // Simulate work
+    }
+}
+
+// Starting a race with the specified synchronization primitive
 template <typename Function>
 void runRace(const string& name, Function raceFunction) {
     fillRaceTrack(raceTrack, raceLength);  // Очистка дорожки
@@ -127,22 +153,4 @@ void runRace(const string& name, Function raceFunction) {
     auto elapsed = chrono::duration_cast<chrono::milliseconds>(end - start);
     cout << name << " Elapsed time: " << elapsed.count() << "ms" << endl;
     printRaceTrack();  // Вывод конечного состояния гоночной дорожки
-}
-
-int main() {
-    sem_init(&semaphore, 0, 1);
-    sem_init(&semaphoreSlim, 0, 1);
-
-    runRace("Mutex", mutexRace);
-    runRace("Semaphore", semaphoreRace);
-    runRace("SemaphoreSlim", semaphoreSlimRace);
-    // runRace("Barrier", barrierRace);  // Barrier currently not supported
-    runRace("SpinLock", spinLockRace);
-    runRace("SpinWait", spinWaitRace);
-    runRace("Monitor", monitorRace);
-
-    sem_destroy(&semaphore);
-    sem_destroy(&semaphoreSlim);
-
-    return 0;
 }
