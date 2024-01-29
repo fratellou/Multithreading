@@ -1,5 +1,5 @@
 CFLAGS=-Wall -Wextra -Werror
-EXIT=$(STRUCT)objects/
+EXIT=./objects/
 
 all:students threading banker
 
